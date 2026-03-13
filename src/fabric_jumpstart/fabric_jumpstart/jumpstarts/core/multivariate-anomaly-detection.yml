@@ -1,0 +1,45 @@
+id: 22
+logical_id: multivariate-anomaly-detection
+name: Multivariate Anomaly Detection
+description: >-
+  Monitor and maintain high-value industrial equipment, detect subtle anomalies using advanced algorithms, send automated alerts and provide comprehensive visualization capabilities to facilitate diagnostics and root cause analysis.
+date_added: 03/13/2026
+include_in_listing: true
+workload_tags:
+  - Real-Time Intelligence
+  - Power BI
+  - Data Science
+scenario_tags:
+  - Streaming
+type: Accelerator
+source:
+  repo_url: https://github.com/slavatrofimov/Multivariate-Anomaly-Detection-with-Microsoft-Fabric.git
+  repo_ref: adopt-jumpstart
+  workspace_path: workspace/
+  files_source_path: data/
+  files_destination_lakehouse: ReferenceDataLH
+  files_destination_path: data/
+items_in_scope:
+  - Notebook
+  - Eventhouse
+  - Eventstream
+  - KQLDatabase
+  - KQLDashboard
+  - KQLQueryset
+  - Eventstream
+  - SemanticModel
+  - Report
+  - Reflex
+  - DataAgent
+  - Lakehouse
+  - Environment
+
+jumpstart_docs_uri: "https://github.com/slavatrofimov/Multivariate-Anomaly-Detection-with-Microsoft-Fabric/blob/adopt-jumpstart/README.md"
+entry_point: PostDeploymentConfig.Notebook
+test_suite: ""
+owner_email: fabricjumpstart.collab@microsoft.com
+minutes_to_deploy: 5
+minutes_to_complete_jumpstart: 15
+video_url: "https://youtu.be/b-LAZZHX20A"
+difficulty: "Intermediate"
+last_updated: "2026-03-13"
