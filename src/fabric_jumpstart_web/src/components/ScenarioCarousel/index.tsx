@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCoverflow, Navigation, Keyboard } from 'swiper/modules';
@@ -9,6 +9,7 @@ import { tokens } from '@fluentui/react-components';
 import { ChevronRightFilled } from '@fluentui/react-icons';
 import { useThemeContext } from '@components/Providers/themeProvider';
 import JumpstartCard from '@components/JumpstartCard';
+import SkeletonCard from '@components/JumpstartCard/SkeletonCard';
 import scenariosData from '@data/scenarios.json';
 import type { ScenarioCard } from '@scenario/scenario';
 
@@ -19,12 +20,30 @@ import 'swiper/css/navigation';
 export default function ScenarioCarousel() {
   const scenarios = scenariosData as ScenarioCard[];
   const [activeIndex, setActiveIndex] = useState(0);
+  const [ready, setReady] = useState(false);
   const { theme } = useThemeContext();
   const isDark = theme.key === 'dark';
 
   const handleSlideChange = useCallback((swiper: SwiperType) => {
     setActiveIndex(swiper.realIndex);
   }, []);
+
+  // Preload diagram images before revealing cards
+  useEffect(() => {
+    if (scenarios.length === 0) { setReady(true); return; }
+    const suffix = isDark ? 'dark' : 'light';
+    let loaded = 0;
+    const total = scenarios.length;
+    const done = () => { loaded++; if (loaded >= total) setReady(true); };
+    const timeout = setTimeout(() => setReady(true), 3000); // fallback
+    scenarios.forEach((s) => {
+      const img = new Image();
+      img.onload = done;
+      img.onerror = done;
+      img.src = `/images/diagrams/${s.slug}_${suffix}.svg`;
+    });
+    return () => clearTimeout(timeout);
+  }, [scenarios, isDark]);
 
   if (scenarios.length === 0) return null;
 
@@ -81,6 +100,35 @@ export default function ScenarioCarousel() {
         className="carousel-viewport"
         style={{ position: 'relative' }}
       >
+        {/* Skeleton placeholder while images preload */}
+        {!ready && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '24px',
+            padding: '20px 0 40px',
+            overflow: 'hidden',
+          }}>
+            {[0, 1, 2].map((i) => (
+              <SkeletonCard
+                key={i}
+                isDark={isDark}
+                style={{
+                  width: '340px',
+                  maxWidth: '85vw',
+                  flexShrink: 0,
+                  borderRadius: '6px',
+                  overflow: 'hidden',
+                  backgroundColor: isDark ? '#1a1a1a' : '#f8f8f8',
+                  border: `1px solid ${isDark ? '#333' : '#e0e0e0'}`,
+                  opacity: i === 1 ? 1 : 0.5,
+                  filter: i === 1 ? 'none' : `blur(2px) brightness(${isDark ? '0.45' : '0.65'})`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+        <div style={{ visibility: ready ? 'visible' : 'hidden', height: ready ? 'auto' : 0, overflow: 'hidden' }}>
         <Swiper
           modules={[EffectCoverflow, Navigation, Keyboard]}
           effect="coverflow"
@@ -105,10 +153,7 @@ export default function ScenarioCarousel() {
               key={scenario.id}
               style={{ width: '340px', maxWidth: '85vw' }}
             >
-              <Link
-                href={`/catalog/${scenario.slug}/?from=home`}
-                style={{ textDecoration: 'none', display: 'block' }}
-              >
+              <div style={{ position: 'relative' }}>
                 <JumpstartCard
                   scenario={scenario}
                   isDark={isDark}
@@ -124,10 +169,21 @@ export default function ScenarioCarousel() {
                     flexDirection: 'column',
                   }}
                 />
-              </Link>
+                {/* Stretched link overlay — covers entire card for reliable click area */}
+                <Link
+                  href={`/catalog/${scenario.slug}/?from=home`}
+                  aria-label={scenario.title}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 5,
+                  }}
+                />
+              </div>
             </SwiperSlide>
           ))}
         </Swiper>
+        </div>
       </div>
 
       {/* Seamless edge fade + active/inactive slide treatment */}
@@ -154,6 +210,9 @@ export default function ScenarioCarousel() {
           filter: blur(2px) brightness(${isDark ? '0.45' : '0.65'});
           opacity: 0.6;
           pointer-events: none;
+        }
+        .swiper-slide:not(.swiper-slide-active) {
+          transform-style: flat !important;
         }
         .swiper-slide-active {
           filter: blur(0) brightness(1);
